@@ -1,3 +1,7 @@
 eventmachine
+twitter
 dm-core
 dm-postgres-adapter
+dm-aggregates
+dm-migrations
+dm-serializer
