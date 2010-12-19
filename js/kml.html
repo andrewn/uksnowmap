@@ -1,0 +1,114 @@
+<html>
+  <head>
+    <title>KML</title>
+    <script type="text/javascript" src="lib/polymaps/polymaps.js"></script>
+    <script type="text/javascript" src="lib/polymaps/lib/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="kml.js"></script>
+    <style type="text/css">
+
+@import url("lib/polymaps/examples/example.css");
+
+.layer circle {
+  fill: #fff;
+  fill-opacity: .5;
+  stroke: #1f77b4;
+  stroke-width: 1.5px;
+}
+
+.layer path {
+  fill: none;
+  stroke: #1f77b4;
+  stroke-width: 2px;
+}
+
+    </style>
+  </head>
+  <body>
+    <script type="text/javascript">
+
+var po = org.polymaps;
+
+var map = po.map()
+    .container(document.body.appendChild(po.svg("svg")))
+    .center({lon: -2, lat: 53})
+    .zoom(6)
+    .add(po.interact());
+
+map.add(po.image()
+    .url(po.url("http://{S}tile.cloudmade.com"
+    + "/1a1b06b230af4efdbb989ea99e9841af" // http://cloudmade.com/register
+    + "/998/256/{Z}/{X}/{Y}.png")
+    .hosts(["a.", "b.", "c.", ""])));
+
+map.add(po.compass()
+    .pan("none"));
+
+function load(e) {
+  for (var i = 0; i < e.features.length; i++) {
+    var f = e.features[i], p = f.data.properties;
+    f.element.appendChild(po.svg("title").appendChild(
+        document.createTextNode(p.name + ": " + p.description))
+        .parentNode);
+  }
+}
+
+var strokes = [ '#FFFFFF', '#EEEEEE', '#DDDDDD', '#CCCCCC', '#BBBBBB', '#AAAAAA', '#999999', '#666666', '#444444', '#222222' ],
+    fills   = [ '#FFFFFF', '#EEEEEE', '#DDDDDD', '#CCCCCC', '#BBBBBB', '#AAAAAA', '#999999', '#666666', '#444444', '#222222' ];
+
+jQuery.ajax({
+  url : 'http://localhost:4567/score/by/postcode',
+  success: function ( data, textStatus, xmlHttpReq ) {
+    console.log('request complete');
+    for ( postcode in data ) {
+      var score = Math.round( data[postcode].score );
+      
+      console.log( 'Stroke: %o fill: %o', strokes[score], fills[score] );
+      
+      var area = po.kml()
+          .url( data[postcode].area_url + ".kml")
+          .tile(false)
+          .on("load", load)
+          .on("load",
+                po.stylist()
+                  .style("stroke", strokes[score] )
+                  .style("fill"  , fills[score]   )
+          );
+      map.add( area );
+      /*
+      var postcodeData = data[postcode];
+      var polygonReq = new RemoteMapAreaFetcher( postcodeData.area_url );
+      polygonReq.onLoad = function( kmlData ) {
+        var area = new MapArea( postcode, kmlData, postcodeData.score );
+        map.add()
+      }
+      */
+    }
+  }
+});
+
+var MapArea = function ( name, polygons, value ) {
+  
+}
+
+// Returns deferred object, ideally
+var RemoteMapAreaFetcher = function ( url ) {
+  var urlBase = 'http://localhost:4567';
+}
+
+/*
+map.add(po.kml()
+    .url("sample.kml")
+    .tile(false)
+    .on("load", load));
+*/
+
+
+    </script>
+    <span id="copy">
+      &copy; 2010
+      <a href="http://www.cloudmade.com/">CloudMade</a>,
+      <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors,
+      <a href="http://creativecommons.org/licenses/by-sa/2.0/">CCBYSA</a>.
+    </span>
+  </body>
+</html>

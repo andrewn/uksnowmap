@@ -22,49 +22,18 @@ def filter_for_uk_snow( tweets )
   found_uk_snow
 end
 
-require 'dm-core'
-require 'dm-migrations'
-
-class SnowTweet
-  include DataMapper::Resource
-  property :id,         Serial
-  property :score,      String    
-  property :postal,     String    
-end
-
-class Backend
-  
-  def self.init
-    DataMapper.setup(
-      :default, 
-      ENV['DATABASE_URL'] || 'sqlite:///Users/andrew/Dropbox/uksnow/snow.db'
-    )
-    DataMapper.finalize
-    DataMapper.auto_upgrade!
-  end
-  
-  def self.store( tweets )
-    self.init
-    tweets.each do | t |
-      SnowTweet.first_or_create(
-        {
-          :id     => t[:tw_id]
-        },
-        { 
-          :postal => t[:postal],
-          :score  => t[:score]
-        }
-      )
-    end
-  end
-end
+require 'rb/backend'
 
 EM::run do
   EM.add_periodic_timer(30) do 
-    uk_snow_tweets = Twitter::Search.new.q("#uksnow").fetch
-    tweets = filter_for_uk_snow( uk_snow_tweets )
-    p tweets
-    Backend::store(tweets)
+    begin
+      uk_snow_tweets = Twitter::Search.new.q("#uksnow").fetch
+      tweets = filter_for_uk_snow( uk_snow_tweets )
+      p tweets
+      Backend::store(tweets)
+    rescue Exception=>e
+     puts 'There was a problem'
+    end
   end
 end
 puts "Finished."
